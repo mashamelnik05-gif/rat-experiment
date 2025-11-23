@@ -6,6 +6,7 @@
     <script src="https://unpkg.com/jspsych@7.3.3"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
     <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.2"></script>
     <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" />
     <style>
         body { 
@@ -30,6 +31,23 @@
             font-size: 36px;
             letter-spacing: 2px;
         }
+        .skip-button {
+            display: none;
+            margin-top: 30px;
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .skip-button:hover {
+            background-color: #7f8c8d;
+        }
+        .skip-button.visible {
+            display: inline-block;
+        }
     </style>
 </head>
 <body></body>
@@ -40,20 +58,18 @@ const PARTICIPANT_ID = 'P' + Date.now();
 
 const jsPsych = initJsPsych({
     on_finish: function() {
-        const main_data = jsPsych.data.get().filter({trial_type_marker: 'rat_task', is_practice: false});
-        const correct = main_data.filter({correct: true}).count();
-        const total = main_data.count();
-        
         jsPsych.getDisplayElement().innerHTML = `
             <div class="rat-container">
                 <h2>Эксперимент завершён!</h2>
-                <p>Вы правильно решили ${correct} из ${total} задач.</p>
                 <br>
                 <h3>Большое спасибо за участие!</h3>
                 <br><br>
                 <button onclick="downloadData()" style="font-size: 18px; padding: 15px 30px; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 5px;">
                     📥 Скачать мои данные
                 </button>
+                <p style="color: #e74c3c; font-weight: bold; margin-top: 20px;">
+                    Пожалуйста, не закрывайте страницу
+                </p>
             </div>
         `;
     }
@@ -89,6 +105,7 @@ const RAT_TASKS = [
 
 let timeline = [];
 let task_start = null;
+let skipTimeout = null;
 
 // Инструкция
 timeline.push({
@@ -99,9 +116,12 @@ timeline.push({
             <p>Эксперимент займёт <strong>не более 30 минут</strong>.</p>
             <br>
             <p><strong>Важные правила:</strong></p>
-            <ul style="text-align: left; max-width: 600px; margin: 20px auto; font-size: 20px;">
+            <ul style="text-align: left; max-width: 650px; margin: 20px auto; font-size: 19px; line-height: 1.6;">
                 <li>Постарайтесь не отвлекаться во время выполнения задач</li>
                 <li>Если почувствуете себя плохо — прекратите эксперимент</li>
+                <li><strong>Постарайтесь решить максимальное количество задач</strong></li>
+                <li>Вам будет дана возможность пропустить задачу, однако <strong>пользуйтесь ей только в крайнем случае</strong></li>
+                <li><strong>Не нажимайте на пробел</strong>, если не почувствовали "Озарение" или если не уверены в ответе — <strong>лучше подумайте ещё немного</strong></li>
             </ul>
             <br>
             <p style="color: #e74c3c; font-weight: bold; font-size: 22px;">
@@ -115,7 +135,7 @@ timeline.push({
     choices: [' ']
 });
 
-// Объяснение задачи
+// Объяснение задачи с ПРИМЕРОМ
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
@@ -125,10 +145,10 @@ timeline.push({
             <p>Ваша задача — найти <strong>существительное</strong>, которое связано со всеми тремя глаголами.</p>
             <br>
             <p style="font-size: 20px;"><strong>Пример:</strong></p>
-            <p style="font-size: 28px; color: #2c3e50;">ПИТЬ · ВАРИТЬ · МОЛОТЬ</p>
-            <p style="font-size: 22px;">Ответ: <strong>КОФЕ</strong></p>
+            <p style="font-size: 28px; color: #2c3e50;">ОТКРЫВАТЬ · ЗАХЛОПЫВАТЬ · КРАСИТЬ</p>
+            <p style="font-size: 22px;">Ответ: <strong>ДВЕРЬ</strong></p>
             <br>
-            <p style="font-size: 18px; color: #7f8c8d;">(можно пить кофе, варить кофе, молоть кофе)</p>
+            <p style="font-size: 18px; color: #7f8c8d;">(можно открывать дверь, захлопывать дверь, красить дверь)</p>
             <br><br>
             <p><em>Нажмите ПРОБЕЛ для продолжения</em></p>
         </div>
@@ -136,13 +156,13 @@ timeline.push({
     choices: [' ']
 });
 
-// Функция создания RAT задачи
+// Функция создания RAT задачи с кнопкой "Пропустить"
 function createRATTrial(task, task_number, is_practice = false) {
     let task_timeline = [];
     
-    // Показ слов
+    // Показ слов с возможностью пропуска
     task_timeline.push({
-        type: jsPsychHtmlKeyboardResponse,
+        type: jsPsychHtmlButtonResponse,
         stimulus: `
             <div class="rat-container">
                 <p style="color: #95a5a6; font-size: 18px;">${is_practice ? '🔹 ПРОБНАЯ ЗАДАЧА' : 'Задача ' + task_number + ' / 20'}</p>
@@ -152,62 +172,122 @@ function createRATTrial(task, task_number, is_practice = false) {
                 <p style="color: #7f8c8d; font-size: 18px;">
                     <em>⚡ Нажмите ПРОБЕЛ в момент инсайта</em>
                 </p>
+                <div id="skip-button-container"></div>
             </div>
         `,
-        choices: [' '],
+        choices: ['Пропустить задачу'],
+        button_html: '<button class="skip-button" id="skip-btn">%choice%</button>',
         on_start: function() {
             task_start = performance.now();
+            // Показываем кнопку "Пропустить" через 40 секунд
+            skipTimeout = setTimeout(function() {
+                const btn = document.getElementById('skip-btn');
+                if (btn) {
+                    btn.classList.add('visible');
+                }
+            }, 40000);
         },
         on_finish: function(data) {
-            const insight_time = performance.now() - task_start;
-            data.insight_time = insight_time;
+            clearTimeout(skipTimeout);
+            const time_elapsed = performance.now() - task_start;
+            data.insight_time = time_elapsed;
             data.task_words = task.words.join(',');
             data.correct_answer = task.answer;
             data.is_practice = is_practice;
             data.condition = CONDITION;
             data.participant_id = PARTICIPANT_ID;
             data.task_number = task_number;
+            data.skipped = (data.response === 0); // Если нажали на кнопку
+            
+            // Если задача пропущена
+            if (data.skipped) {
+                data.user_answer = 'SKIPPED';
+                data.correct = false;
+                data.trial_type_marker = 'rat_task';
+            }
         }
     });
     
-    // Ввод ответа
+    // Ждём нажатие пробела (если не пропустили)
     task_timeline.push({
-        type: jsPsychSurveyText,
-        questions: [{
-            prompt: `
+        timeline: [{
+            type: jsPsychHtmlKeyboardResponse,
+            stimulus: `
                 <div class="rat-container">
-                    <p>Глаголы: <strong style="color: #2c3e50; font-size: 24px;">${task.words.join(' · ')}</strong></p>
-                    <p>Введите существительное:</p>
+                    <p style="color: #95a5a6; font-size: 18px;">${is_practice ? '🔹 ПРОБНАЯ ЗАДАЧА' : 'Задача ' + task_number + ' / 20'}</p>
+                    <p>Найдите существительное, связанное с глаголами:</p>
+                    <div class="rat-words">${task.words.join('   ·   ')}</div>
+                    <br>
+                    <p style="color: #7f8c8d; font-size: 18px;">
+                        <em>⚡ Нажмите ПРОБЕЛ в момент инсайта</em>
+                    </p>
                 </div>
             `,
-            name: 'answer',
-            required: true,
-            placeholder: 'Ваш ответ'
+            choices: [' '],
+            on_finish: function(data) {
+                const insight_time = performance.now() - task_start;
+                data.insight_time = insight_time;
+                data.task_words = task.words.join(',');
+                data.correct_answer = task.answer;
+                data.is_practice = is_practice;
+                data.condition = CONDITION;
+                data.participant_id = PARTICIPANT_ID;
+                data.task_number = task_number;
+            }
         }],
-        on_finish: function(data) {
-            const user_answer = data.response.answer.toUpperCase().trim();
-            data.correct = (user_answer === task.answer);
-            data.user_answer = user_answer;
-            data.task_words = task.words.join(',');
-            data.correct_answer = task.answer;
-            data.is_practice = is_practice;
-            data.condition = CONDITION;
-            data.participant_id = PARTICIPANT_ID;
-            data.task_number = task_number;
-            data.trial_type_marker = 'rat_task';
+        conditional_function: function() {
+            // Показываем только если задача НЕ была пропущена
+            const last_trial = jsPsych.data.get().last(1).values()[0];
+            return !last_trial.skipped;
+        }
+    });
+    
+    // Ввод ответа (если не пропустили)
+    task_timeline.push({
+        timeline: [{
+            type: jsPsychSurveyText,
+            questions: [{
+                prompt: `
+                    <div class="rat-container">
+                        <p>Глаголы: <strong style="color: #2c3e50; font-size: 24px;">${task.words.join(' · ')}</strong></p>
+                        <p>Введите существительное:</p>
+                    </div>
+                `,
+                name: 'answer',
+                required: true,
+                placeholder: 'Ваш ответ'
+            }],
+            on_finish: function(data) {
+                const user_answer = data.response.answer.toUpperCase().trim();
+                data.correct = (user_answer === task.answer);
+                data.user_answer = user_answer;
+                data.task_words = task.words.join(',');
+                data.correct_answer = task.answer;
+                data.is_practice = is_practice;
+                data.condition = CONDITION;
+                data.participant_id = PARTICIPANT_ID;
+                data.task_number = task_number;
+                data.trial_type_marker = 'rat_task';
+                data.skipped = false;
+            }
+        }],
+        conditional_function: function() {
+            // Показываем только если задача НЕ была пропущена
+            const last_trials = jsPsych.data.get().last(2).values();
+            return !last_trials[0].skipped;
         }
     });
     
     return task_timeline;
 }
 
-// Пробная задача
+// Пробная задача (очень простая)
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
         <div class="rat-container">
             <h3>Пробная задача</h3>
-            <p>Сначала потренируйтесь на одной задаче</p>
+            <p>Сначала потренируйтесь на одной простой задаче</p>
             <br>
             <p><em>Нажмите ПРОБЕЛ</em></p>
         </div>
@@ -215,8 +295,8 @@ timeline.push({
     choices: [' ']
 });
 
-// Пробная задача - КОФЕ
-timeline.push(...createRATTrial({words: ['ПИТЬ', 'ВАРИТЬ', 'МОЛОТЬ'], answer: 'КОФЕ'}, 0, true));
+// Пробная задача - НЕБО (очень простая)
+timeline.push(...createRATTrial({words: ['СМОТРЕТЬ', 'ЛЕТАТЬ', 'ВИДЕТЬ'], answer: 'НЕБО'}, 0, true));
 
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
@@ -226,6 +306,8 @@ timeline.push({
             <br>
             <p>Теперь переходим к основным задачам</p>
             <p>Всего будет <strong>20 задач</strong></p>
+            <br>
+            <p style="color: #95a5a6; font-size: 18px;">Помните: кнопка "Пропустить задачу" появится через 40 секунд,<br>но используйте её только в крайнем случае</p>
             <br><br>
             <p><em>Нажмите ПРОБЕЛ для начала</em></p>
         </div>
@@ -242,3 +324,4 @@ jsPsych.run(timeline);
 
 </script>
 </html>
+

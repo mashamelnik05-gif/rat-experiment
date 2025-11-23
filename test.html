@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>RAT Тест</title>
+    <script src="https://unpkg.com/jspsych@7.3.3"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.2"></script>
+    <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" />
+    <style>
+        .rat-container { 
+            font-size: 24px; 
+            max-width: 800px; 
+            margin: 50px auto;
+            text-align: center;
+        }
+        .rat-words { 
+            font-weight: bold; 
+            color: #2c3e50; 
+            margin: 30px 0; 
+            font-size: 32px; 
+        }
+    </style>
+</head>
+<body></body>
+<script>
+
+const jsPsych = initJsPsych({
+    on_finish: function() {
+        jsPsych.data.displayData();
+    }
+});
+
+const RAT_TASKS = [
+    {words: ['РЫБА', 'КЛЮВ', 'КОСТЬ'], answer: 'НОС'},
+    {words: ['ДЕРЕВО', 'ПУТЬ', 'СНЕГ'], answer: 'ЛЫЖА'},
+    {words: ['ВОДА', 'БОР', 'ОЧКИ'], answer: 'СОСНА'}
+];
+
+let timeline = [];
+let insight_times = [];
+let task_start = null;
+
+// Инструкция
+timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <div class="rat-container">
+            <h2>Тест RAT</h2>
+            <p>Найдите слово, связанное с тремя словами</p>
+            <p>Нажмите ПРОБЕЛ в момент озарения</p>
+            <p><em>Нажмите ПРОБЕЛ для начала</em></p>
+        </div>
+    `,
+    choices: [' ']
+});
+
+// Создаем задачи
+RAT_TASKS.forEach((task, idx) => {
+    // Показ слов
+    timeline.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+            <div class="rat-container">
+                <p>Задача ${idx + 1}</p>
+                <div class="rat-words">${task.words.join('   ·   ')}</div>
+                <p style="color: gray;">Нажмите ПРОБЕЛ в момент инсайта</p>
+            </div>
+        `,
+        choices: [' '],
+        on_start: function() {
+            task_start = Date.now();
+        },
+        on_finish: function(data) {
+            const insight_time = Date.now() - task_start;
+            data.insight_time = insight_time;
+            data.words = task.words.join(',');
+            data.correct_answer = task.answer;
+        }
+    });
+    
+    // Ввод ответа
+    timeline.push({
+        type: jsPsychSurveyText,
+        questions: [{
+            prompt: `<div class="rat-container"><p>Слова: <strong>${task.words.join(' · ')}</strong></p><p>Ваш ответ:</p></div>`,
+            name: 'answer',
+            required: true
+        }],
+        on_finish: function(data) {
+            const answer = data.response.answer.toUpperCase().trim();
+            data.correct = (answer === task.answer);
+            data.user_answer = answer;
+        }
+    });
+});
+
+// Финал
+timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '<div class="rat-container"><h2>Готово!</h2><p>Данные выше</p></div>',
+    choices: "NO_KEYS",
+    trial_duration: 3000
+});
+
+jsPsych.run(timeline);
+
+</script>
+</html>

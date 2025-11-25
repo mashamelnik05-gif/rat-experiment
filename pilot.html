@@ -13,7 +13,7 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f5f5f5;
             margin: 0;
             padding: 0;
         }
@@ -23,24 +23,35 @@
             margin: 40px auto;
             padding: 40px;
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             line-height: 1.8;
         }
         
         h2 {
-            color: #667eea;
+            color: #333;
             text-align: center;
             margin-bottom: 30px;
             font-size: 28px;
         }
         
         .instruction-box {
-            background: #f8f9fa;
+            background: #f9f9f9;
             padding: 25px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
+            border-radius: 5px;
+            border-left: 4px solid #333;
             margin: 20px 0;
+        }
+        
+        .instruction-box p {
+            color: #333;
+            font-size: 17px;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+        
+        .instruction-box p:last-child {
+            margin-bottom: 0;
         }
         
         .jspsych-survey-likert {
@@ -52,9 +63,9 @@
             margin-bottom: 15px;
             font-weight: 500;
             color: #333;
-            background: #f8f9fa;
+            background: #f9f9f9;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 5px;
         }
         
         .jspsych-survey-likert-opts {
@@ -77,6 +88,7 @@
             transition: all 0.3s;
             font-size: 14px;
             line-height: 1.3;
+            color: #333;
         }
         
         .jspsych-survey-likert-opt input[type="radio"] {
@@ -84,30 +96,30 @@
         }
         
         .jspsych-survey-likert-opt:hover .jspsych-survey-likert-opt-label {
-            background: #e9ecef;
+            background: #e9e9e9;
         }
         
         .jspsych-survey-likert-opt input[type="radio"]:checked ~ .jspsych-survey-likert-opt-label {
-            background: #667eea;
+            background: #333;
             color: white;
             font-weight: bold;
         }
         
         .continue-instruction {
             text-align: center;
-            color: #6c757d;
+            color: #666;
             font-style: italic;
             margin-top: 30px;
             font-size: 16px;
         }
         
         #download-btn {
-            background: #667eea;
+            background: #333;
             color: white;
             border: none;
             padding: 15px 40px;
             font-size: 18px;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
             transition: all 0.3s;
             display: block;
@@ -115,17 +127,22 @@
         }
         
         #download-btn:hover {
-            background: #5568d3;
+            background: #555;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
         .audio-container {
-            background: #f8f9fa;
+            background: #f9f9f9;
             padding: 30px;
-            border-radius: 10px;
+            border-radius: 5px;
             text-align: center;
             margin: 20px 0;
+        }
+        
+        .warning-text {
+            color: #d32f2f;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -176,11 +193,10 @@ function createDSS4(phase) {
             <div class="experiment-container">
                 <h2>Опросник</h2>
                 <div class="instruction-box">
-                    <p>Ниже приведены утверждения, описывающие возможные ощущения.</p>
-                    <p>Оцените, насколько сильно вы ощущаете каждое из них <strong>прямо сейчас</strong>.</p>
-                    <p style="color: #667eea; font-weight: bold;">
-                        Ориентируйтесь только на своё текущее состояние в данный момент.
-                    </p>
+                    <p>Ниже приведены утверждения, описывающие возможные ощущения, которые могут возникать прямо сейчас.</p>
+                    <p>Ваша задача — оценить, насколько сильно вы ощущаете каждое из них в данный момент.</p>
+                    <p>Пожалуйста, ориентируйтесь только на своё текущее состояние, а не на то, что вы испытывали раньше или обычно ощущаете в жизни.</p>
+                    <p><strong>Отметьте один вариант ответа для каждого пункта.</strong></p>
                 </div>
             </div>
         `,
@@ -223,16 +239,9 @@ timeline.push({
             <h2>Добро пожаловать!</h2>
             
             <div class="instruction-box">
-                <p style="font-size: 18px;">
-                    Спасибо за участие в исследовании.
-                </p>
-                <p style="font-size: 18px;">
-                    Эксперимент займёт около <strong>20 минут</strong>.
-                </p>
-                <p style="font-size: 18px; margin-top: 20px;">
-                    Пожалуйста, отвечайте на вопросы честно, 
-                    ориентируясь на свои актуальные ощущения.
-                </p>
+                <p>Спасибо за участие в исследовании.</p>
+                <p>Эксперимент займёт около <strong>20 минут</strong>.</p>
+                <p>Пожалуйста, отвечайте на вопросы честно, ориентируясь на свои актуальные ощущения.</p>
             </div>
             
             <p class="continue-instruction">Нажмите ПРОБЕЛ для начала</p>
@@ -244,23 +253,20 @@ timeline.push({
 // 2. DSS-4 ДО аудио
 timeline.push(createDSS4('pre'));
 
-// 3. Переход к аудио
+// 3. Инструкция к медитации
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
         <div class="experiment-container">
-            <h2>Прослушивание аудио</h2>
+            <h2>Медитация</h2>
             
             <div class="instruction-box">
-                <p style="font-size: 18px;">
-                    Сейчас вы прослушаете аудиозапись.
-                </p>
-                <p style="font-size: 18px; margin-top: 15px;">
-                    Следуйте инструкциям в аудио.
-                </p>
+                <p>Сейчас вы прослушаете медитацию.</p>
+                <p>Погружение в медитацию не зависит от воли и интеллекта.</p>
+                <p>Постарайтесь полностью расслабиться и следовать инструкциям в аудио.</p>
             </div>
             
-            <p class="continue-instruction">Нажмите ПРОБЕЛ для начала прослушивания</p>
+            <p class="continue-instruction">Нажмите ПРОБЕЛ, чтобы начать слушать аудио</p>
         </div>
     `,
     choices: [' ']
@@ -274,11 +280,11 @@ timeline.push({
         <div class="experiment-container">
             <h2>Прослушивание</h2>
             <div class="audio-container">
-                <p style="font-size: 18px; color: #667eea;">
+                <p style="font-size: 18px; color: #333;">
                     Идёт прослушивание аудиозаписи...
                 </p>
             </div>
-            <p style="text-align: center; margin-top: 30px; color: #6c757d; font-size: 16px;">
+            <p style="text-align: center; margin-top: 30px; color: #666; font-size: 16px;">
                 <em>После завершения нажмите ПРОБЕЛ</em>
             </p>
         </div>
@@ -302,12 +308,8 @@ timeline.push({
             <h2>Продолжение</h2>
             
             <div class="instruction-box">
-                <p style="font-size: 18px;">
-                    Теперь, пожалуйста, ответьте на те же вопросы ещё раз.
-                </p>
-                <p style="font-size: 18px; color: #667eea; margin-top: 15px;">
-                    Оцените своё состояние <strong>прямо сейчас</strong>.
-                </p>
+                <p>Теперь, пожалуйста, ответьте на те же вопросы ещё раз.</p>
+                <p>Оцените своё состояние <strong>прямо сейчас</strong>.</p>
             </div>
             
             <p class="continue-instruction">Нажмите ПРОБЕЛ</p>
@@ -329,11 +331,11 @@ timeline.unshift({
     message: `
         <div class="experiment-container">
             <h2>Загрузка...</h2>
-            <p style="text-align: center; font-size: 18px; color: #6c757d;">
+            <p style="text-align: center; font-size: 18px; color: #666;">
                 Пожалуйста, подождите
             </p>
             <div style="text-align: center; margin-top: 30px;">
-                <div style="display: inline-block; width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div style="display: inline-block; width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #333; border-radius: 50%; animation: spin 1s linear infinite;"></div>
             </div>
             <style>
                 @keyframes spin {
@@ -372,10 +374,8 @@ function displayResults() {
             <h2>Эксперимент завершён</h2>
             
             <div class="instruction-box">
-                <p style="font-size: 18px;">
-                    Спасибо за участие!
-                </p>
-                <p style="font-size: 18px; margin-top: 15px;">
+                <p>Спасибо за участие!</p>
+                <p style="margin-top: 15px;">
                     Ваши результаты:<br>
                     До: ${pre_score} баллов<br>
                     После: ${post_score} баллов<br>
@@ -387,11 +387,11 @@ function displayResults() {
                 📥 Скачать данные
             </button>
             
-            <p style="text-align: center; color: #dc3545; font-size: 16px; margin-top: 20px;">
+            <p style="text-align: center; font-size: 16px; margin-top: 20px;" class="warning-text">
                 Пожалуйста, не закрывайте страницу до скачивания данных!
             </p>
             
-            <p style="text-align: center; color: #6c757d; font-size: 14px; margin-top: 20px;">
+            <p style="text-align: center; color: #666; font-size: 14px; margin-top: 20px;">
                 ID: ${PARTICIPANT_ID}
             </p>
         </div>
@@ -417,3 +417,4 @@ function downloadData() {
 
 </script>
 </html>
+

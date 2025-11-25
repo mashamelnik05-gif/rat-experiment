@@ -249,7 +249,7 @@ timeline.push({
 // 2. DSS-4 ДО аудио
 timeline.push(createDSS4('pre'));
 
-// 3. Инструкция к медитации (ОБНОВЛЁННАЯ)
+// 3. Инструкция к медитации
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
@@ -272,7 +272,7 @@ timeline.push({
     choices: [' ']
 });
 
-// 4. Аудио
+// 4. Аудио (ИЗМЕНЕНО: блокируем переход до окончания)
 timeline.push({
     type: jsPsychAudioKeyboardResponse,
     stimulus: 'meditation_audio.mp3',
@@ -283,14 +283,14 @@ timeline.push({
                 <p style="font-size: 18px; color: #333;">
                     Идёт прослушивание аудиозаписи...
                 </p>
+                <p style="font-size: 16px; color: #666; margin-top: 15px;">
+                    Пожалуйста, дождитесь окончания.
+                </p>
             </div>
-            <p style="text-align: center; margin-top: 30px; color: #666; font-size: 16px;">
-                <em>После завершения нажмите ПРОБЕЛ</em>
-            </p>
         </div>
     `,
-    choices: [' '],
-    trial_ends_after_audio: false,
+    choices: "NO_KEYS", // Блокируем все клавиши
+    trial_ends_after_audio: true, // Автоматический переход после окончания аудио
     on_finish: function(data) {
         data.participant_id = PARTICIPANT_ID;
         data.condition = CONDITION;
@@ -355,10 +355,11 @@ timeline.unshift({
 jsPsych.run(timeline);
 
 // ============================================
-// ОТОБРАЖЕНИЕ РЕЗУЛЬТАТОВ
+// ОТОБРАЖЕНИЕ РЕЗУЛЬТАТОВ (БЕЗ БАЛЛОВ ДЛЯ УЧАСТНИКА)
 // ============================================
 
 function displayResults() {
+    // Получаем данные для CSV (но не показываем участнику)
     const data = jsPsych.data.get();
     const dss4_data = data.filter({questionnaire: 'DSS4'});
     
@@ -369,18 +370,13 @@ function displayResults() {
     const post_score = post_data ? post_data.dss4_total_score : 0;
     const difference = post_score - pre_score;
     
+    // Показываем ТОЛЬКО благодарность и кнопку скачивания
     document.body.innerHTML = `
         <div class="experiment-container">
             <h2>Эксперимент завершён</h2>
             
             <div class="instruction-box">
-                <p>Спасибо за участие!</p>
-                <p style="margin-top: 15px;">
-                    Ваши результаты:<br>
-                    До: ${pre_score} баллов<br>
-                    После: ${post_score} баллов<br>
-                    Изменение: ${difference > 0 ? '+' : ''}${difference}
-                </p>
+                <p style="text-align: center; font-size: 18px;">Спасибо за участие!</p>
             </div>
             
             <button id="download-btn" onclick="downloadData()">
@@ -391,11 +387,19 @@ function displayResults() {
                 Пожалуйста, не закрывайте страницу до скачивания данных!
             </p>
             
-            <p style="text-align: center; color: #666; font-size: 14px; margin-top: 20px;">
+            <p style="text-align: center; color: #999; font-size: 12px; margin-top: 30px;">
                 ID: ${PARTICIPANT_ID}
             </p>
         </div>
     `;
+    
+    // Логируем данные в консоль для экспериментатора (можно открыть F12)
+    console.log('=== ДАННЫЕ ДЛЯ ЭКСПЕРИМЕНТАТОРА ===');
+    console.log('Participant ID:', PARTICIPANT_ID);
+    console.log('DSS-4 до медитации:', pre_score);
+    console.log('DSS-4 после медитации:', post_score);
+    console.log('Изменение:', difference);
+    console.log('===================================');
 }
 
 function downloadData() {

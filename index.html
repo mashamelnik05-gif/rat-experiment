@@ -2,201 +2,583 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>RAT Эксперимент</title>
+    <title>RAT Эксперимент - Экспериментальная группа</title>
     <script src="https://unpkg.com/jspsych@7.3.3"></script>
     <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.2"></script>
     <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.2"></script>
     <script src="https://unpkg.com/@jspsych/plugin-audio-keyboard-response@1.1.2"></script>
     <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.2"></script>
-    <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <link href="https://unpkg.com/jspsych@7.3.3/css/jspsych.css" rel="stylesheet" />
     <style>
-        body { font-family: Arial, sans-serif; }
-        .rat-container {
-            font-size: 24px;
-            line-height: 2;
-            max-width: 800px;
-            margin: 0 auto;
+        body { 
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
         }
-        .rat-words {
+        .rat-container { 
+            font-size: 22px; 
+            max-width: 900px; 
+            margin: 50px auto;
+            text-align: center;
+            line-height: 1.8;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .rat-words { 
+            font-weight: bold; 
+            color: #2c3e50; 
+            margin: 30px 0; 
+            font-size: 36px;
+            letter-spacing: 2px;
+        }
+        .explanation-box {
+            background: #ecf0f1;
+            padding: 25px;
+            border-radius: 8px;
+            margin: 20px auto;
+            max-width: 700px;
+            text-align: left;
+            font-size: 19px;
+            line-height: 1.7;
+        }
+        .correct-answer {
+            color: #27ae60;
             font-weight: bold;
-            color: #2c3e50;
-            margin: 30px 0;
-            font-size: 32px;
+            font-size: 28px;
+        }
+        .example-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 15px;
+        }
+        .example-list li {
+            padding: 8px 0;
+            font-size: 20px;
+        }
+        .checkmark {
+            color: #27ae60;
+            margin-right: 10px;
+        }
+        #skip-btn {
+            display: none;
+            margin-top: 30px;
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #skip-btn:hover {
+            background-color: #7f8c8d;
+        }
+        .meditation-container {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .meditation-instruction {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #333;
+            margin: 20px 0;
         }
     </style>
 </head>
 <body></body>
 <script>
 
-const CONDITION = 'experimental';
-const AUDIO_FILE = 'audio/suggestion1.mp3';
+const CONDITION = 'experimental_meditation';
+const PARTICIPANT_ID = 'EXP_' + Date.now();
 
 const jsPsych = initJsPsych({
     on_finish: function() {
-        const data = jsPsych.data.get().filter({trial_type_custom: 'main'});
-        
-        // Показываем результаты
-        const results = data.select('insight_time').values;
-        const correct = data.filter({correct: true}).count();
-        const total = data.count();
-        
         jsPsych.getDisplayElement().innerHTML = `
             <div class="rat-container">
-                <h2>Эксперимент завершен!</h2>
-                <p>Правильных ответов: ${correct} из ${total}</p>
-                <p>Спасибо за участие!</p>
-                <button onclick="jsPsych.data.get().localSave('csv', 'data_${CONDITION}_${Date.now()}.csv')">
-                    Скачать данные
+                <h2>Эксперимент завершён!</h2>
+                <br>
+                <h3>Большое спасибо за участие!</h3>
+                <br><br>
+                <button onclick="downloadData()" style="font-size: 18px; padding: 15px 30px; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 5px;">
+                    📥 Скачать мои данные
                 </button>
+                <p style="color: #e74c3c; font-weight: bold; margin-top: 20px;">
+                    Пожалуйста, не закрывайте страницу
+                </p>
             </div>
         `;
     }
 });
 
+function downloadData() {
+    jsPsych.data.get().localSave('csv', `data_${CONDITION}_${PARTICIPANT_ID}.csv`);
+}
+
 const RAT_TASKS = [
-    {words: ['РЫБА', 'КЛЮВ', 'КОСТЬ'], answer: 'НОС', trial: 'practice'},
-    {words: ['ДЕРЕВО', 'ПУТЬ', 'СНЕГ'], answer: 'ЛЫЖА', trial: 'main'},
-    {words: ['ВОДА', 'БОР', 'ОЧКИ'], answer: 'СОСНА', trial: 'main'},
-    {words: ['КРЫЛО', 'ВОЗ', 'НЕБО'], answer: 'ВОЗДУХ', trial: 'main'},
-    {words: ['МОРЕ', 'ЛОЖЬ', 'ТАНЕЦ'], answer: 'ВОЛНА', trial: 'main'},
-    {words: ['СНЕГ', 'МЫШЬ', 'ДЕРЕВО'], answer: 'БЕЛКА', trial: 'main'},
-    {words: ['ЗВЕЗДА', 'ДОРОГА', 'ВЕЧЕР'], answer: 'СВЕТ', trial: 'main'},
-    {words: ['РЕКА', 'ЗЕМЛЯ', 'ГОЛОВА'], answer: 'БЕРЕГ', trial: 'main'},
-    {words: ['КНИГА', 'ДЕНЬ', 'СОЛНЦЕ'], answer: 'СВЕТ', trial: 'main'},
-    {words: ['ГОРА', 'СНЕГ', 'ВОДА'], answer: 'ВЕРШИНА', trial: 'main'},
-    {words: ['ДОМ', 'МЫШЬ', 'СЫР'], answer: 'НОРКА', trial: 'main'},
-    {words: ['НЕБО', 'ВОДА', 'ПУТЬ'], answer: 'СИНИЙ', trial: 'main'},
-    {words: ['ОГОНЬ', 'ВОЗ', 'ЗЕМЛЯ'], answer: 'ПЕЧЬ', trial: 'main'},
-    {words: ['РУКА', 'ЦВЕТОК', 'СТОЛ'], answer: 'БУКЕТ', trial: 'main'},
-    {words: ['ДЕНЬ', 'НОЧЬ', 'ЧАС'], answer: 'ВРЕМЯ', trial: 'main'},
-    {words: ['ЛЕС', 'ГРИБ', 'КОРЗИНА'], answer: 'ПОЛЯНА', trial: 'main'},
-    {words: ['ЯБЛОКО', 'КРАСНЫЙ', 'САД'], answer: 'ДЕРЕВО', trial: 'main'},
-    {words: ['МАШИНА', 'ДОРОГА', 'БЕНЗИН'], answer: 'КОЛЕСО', trial: 'main'},
-    {words: ['МОСТ', 'РЕКА', 'КАМЕНЬ'], answer: 'БЕРЕГ', trial: 'main'},
-    {words: ['ОКНО', 'СТЕНА', 'КРЫША'], answer: 'ДОМ', trial: 'main'}
+    {words: ['ПАДАТЬ', 'ЛАЗИТЬ', 'ПРОВОДИТЬ'], answer: 'ВОДА'},
+    {words: ['ГЕНЕРИРОВАТЬ', 'ВОЗИТЬ', 'УВЛАЖНЯТЬ'], answer: 'ПАР'},
+    {words: ['ХРАНИТЬ', 'ЛЮБИТЬ', 'ИЗДАВАТЬ'], answer: 'КНИГА'},
+    {words: ['РУБИТЬ', 'ВОЗИТЬ', 'ПИЛИТЬ'], answer: 'ЛЕС'},
+    {words: ['МЕТАТЬ', 'ТУШИТЬ', 'СТОЯТЬ'], answer: 'ОГОНЬ'},
+    {words: ['ЛЕТАТЬ', 'ПАДАТЬ', 'СЧИТАТЬ'], answer: 'ЗВЕЗДА'},
+    {words: ['ПЕЧЬ', 'СТОЯТЬ', 'ЛЕЧИТЬ'], answer: 'СОЛНЦЕ'},
+    {words: ['СКЛАДЫВАТЬ', 'СОЧЕТАТЬ', 'УПОТРЕБЛЯТЬ'], answer: 'СЛОВО'},
+    {words: ['ЗАПИСЫВАТЬ', 'РЕГИСТРИРОВАТЬ', 'НАБЛЮДАТЬ'], answer: 'ВИДЕО'},
+    {words: ['РЕЗАТЬ', 'ЛОМАТЬ', 'КРУЖИТЬ'], answer: 'ГОЛОВА'},
+    {words: ['РЕЖИССИРОВАТЬ', 'ИЗОЛИРОВАТЬ', 'УСИЛИВАТЬ'], answer: 'ЗВУК'},
+    {words: ['ПИСАТЬ', 'ПОЖИМАТЬ', 'МЫТЬ'], answer: 'РУКА'},
+    {words: ['СИДЕТЬ', 'СТРОИТЬ', 'УПРАВЛЯТЬ'], answer: 'ДОМ'},
+    {words: ['ТРЯСТИ', 'РЫТЬ', 'ДЕЛАТЬ'], answer: 'ЗЕМЛЯ'},
+    {words: ['ХРАНИТЬ', 'ГРЕТЬ', 'ДВИГАТЬ'], answer: 'ТЕЛО'},
+    {words: ['ПИТЬ', 'ВАРИТЬ', 'МОЛОТЬ'], answer: 'КОФЕ'},
+    {words: ['ПАДАТЬ', 'ТЕСАТЬ', 'ДРОБИТЬ'], answer: 'КАМЕНЬ'},
+    {words: ['ХУЛИТЬ', 'ЯВЛЯТЬСЯ', 'СЛУЖИТЬ'], answer: 'БОГ'},
+    {words: ['КОЛОТЬ', 'РЕЗАТЬ', 'ХОДИТЬ'], answer: 'ЛЁД'},
+    {words: ['ТЕЧЬ', 'ХАРКАТЬ', 'ИЗЛИВАТЬ'], answer: 'КРОВЬ'}
 ];
 
 let timeline = [];
-let insight_time = null;
-let trial_start_time = null;
+let task_start_time = null;
+let current_task_skipped = false;
 
-// Предзагрузка
+// ============================================
+// ПРЕДЗАГРУЗКА АУДИО
+// ============================================
+
 timeline.push({
     type: jsPsychPreload,
-    audio: [AUDIO_FILE]
+    audio: ['meditation_audio.mp3'],
+    message: `
+        <div class="rat-container">
+            <h2>Загрузка...</h2>
+            <p style="text-align: center; font-size: 18px; color: #666;">
+                Пожалуйста, подождите
+            </p>
+            <div style="text-align: center; margin-top: 30px;">
+                <div style="display: inline-block; width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid #333; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        </div>
+    `,
+    show_progress_bar: true
 });
 
-// Инструкция
+// Приветствие
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
         <div class="rat-container">
-            <h2>Добро пожаловать!</h2>
-            <p>Вам будут предложены задачи на поиск ассоциаций (RAT).</p>
-            <p>Вы увидите 3 слова. Найдите четвертое слово, которое связано со всеми тремя.</p>
-            <p><strong>Важно:</strong> Как только почувствуете момент озарения ("Эврика!"), 
-            <strong>сразу нажмите ПРОБЕЛ</strong>.</p>
-            <p>После этого введите ваш ответ.</p>
+            <h2>Добро пожаловать в эксперимент!</h2>
+            <p>Эксперимент займёт <strong>не более 30 минут</strong>.</p>
+            <br>
+            <p><strong>Важные правила:</strong></p>
+            <ul style="text-align: left; max-width: 650px; margin: 20px auto; font-size: 19px; line-height: 1.6;">
+                <li>Постарайтесь не отвлекаться во время выполнения задач</li>
+                <li>Если почувствуете себя плохо — прекратите эксперимент</li>
+                <li><strong>Постарайтесь решить максимальное количество задач</strong></li>
+                <li>Вам будет дана возможность пропустить задачу, однако <strong>пользуйтесь ей только в крайнем случае</strong></li>
+                <li><strong>Не нажимайте на пробел</strong>, если не почувствовали "Озарение" или если не уверены в ответе — <strong>лучше подумайте ещё немного</strong></li>
+            </ul>
             <br><br>
-            <p><em>Нажмите ПРОБЕЛ для начала</em></p>
+            <p><em>Нажмите ПРОБЕЛ для продолжения</em></p>
         </div>
     `,
     choices: [' ']
 });
 
-// Функция создания задачи
-function createRATTrial(task) {
-    let task_timeline = [];
+// Подробное объяснение RAT
+timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <div class="rat-container">
+            <h3>Что такое задачи RAT?</h3>
+            <div class="explanation-box">
+                <p><strong>RAT (Remote Associates Test)</strong> — это задачи на поиск отдалённых ассоциаций.</p>
+                <p>Вам будут показаны <strong>3 глагола</strong>. Ваша задача — найти <strong>одно существительное</strong>, которое логически связано со всеми тремя глаголами одновременно.</p>
+                <br>
+                <p><strong>Как понять, что ответ правильный?</strong></p>
+                <p>Найденное существительное должно <strong>естественно сочетаться</strong> с каждым из трёх глаголов.</p>
+                <p><strong>Способ проверки:</strong> мысленно соедините существительное с каждым глаголом. Если все сочетания звучат естественно — ответ верный!</p>
+            </div>
+            <br>
+            <p><em>Нажмите ПРОБЕЛ для примера</em></p>
+        </div>
+    `,
+    choices: [' ']
+});
+
+// Демонстрационный пример с подробным объяснением
+timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <div class="rat-container">
+            <h3>Демонстрационный пример</h3>
+            <p>Даны три глагола:</p>
+            <div class="rat-words">ОТКРЫВАТЬ · ЗАХЛОПЫВАТЬ · КРАСИТЬ</div>
+            <br>
+            <p style="font-size: 20px;">Какое существительное связано со всеми тремя?</p>
+            <br>
+            <p><em>Подумайте несколько секунд, затем нажмите ПРОБЕЛ</em></p>
+        </div>
+    `,
+    choices: [' ']
+});
+
+timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <div class="rat-container">
+            <h3>Правильный ответ</h3>
+            <p class="correct-answer">ДВЕРЬ</p>
+            <br>
+            <div class="explanation-box">
+                <p><strong>Проверка:</strong></p>
+                <ul class="example-list">
+                    <li><span class="checkmark">✓</span> <strong>ОТКРЫВАТЬ</strong> дверь — звучит естественно</li>
+                    <li><span class="checkmark">✓</span> <strong>ЗАХЛОПЫВАТЬ</strong> дверь — звучит естественно</li>
+                    <li><span class="checkmark">✓</span> <strong>КРАСИТЬ</strong> дверь — звучит естественно</li>
+                </ul>
+                <br>
+                <p>Все три сочетания логичны и естественны! Это значит, что ответ <strong>ДВЕРЬ</strong> правильный.</p>
+                <p style="color: #7f8c8d; margin-top: 15px;"><em>Вы не ошибётесь с ответом, потому что правильное существительное будет действительно хорошо подходить ко всем трём глаголам.</em></p>
+            </div>
+            <br>
+            <p><em>Нажмите ПРОБЕЛ для продолжения</em></p>
+        </div>
+    `,
+    choices: [' ']
+});
+
+// Момент инсайта
+timeline.push({
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+        <div class="rat-container">
+            <h3>Важно: момент озарения ("Эврика!")</h3>
+            <div class="explanation-box">
+                <p>В процессе решения задач у вас может возникнуть внезапное <strong>озарение</strong> — момент, когда правильный ответ "приходит" сам собой.</p>
+                <p>Это ощущение часто называют <strong>"Эврика!"</strong> или <strong>"Ага-момент"</strong>.</p>
+                <br>
+                <p style="color: #e74c3c; font-weight: bold; font-size: 21px;">
+                    ⚡ Когда почувствуете это озарение — СРАЗУ нажмите ПРОБЕЛ
+                </p>
+                <p>После этого появится поле для ввода вашего ответа.</p>
+                <br>
+                <p><strong>Не нажимайте пробел</strong>, если:</p>
+                <ul style="text-align: left;">
+                    <li>Вы не уверены в ответе</li>
+                    <li>Просто хотите попробовать случайный вариант</li>
+                    <li>Не чувствуете момента озарения</li>
+                </ul>
+                <p style="margin-top: 10px;">В таких случаях <strong>лучше подумайте ещё</strong>.</p>
+            </div>
+            <br>
+            <p><em>Нажмите ПРОБЕЛ для продолжения</em></p>
+        </div>
+    `,
+    choices: [' ']
+});
+
+// Функция для пробных задач (С объяснением)
+function createPracticeTrial(task, task_label, explanation) {
+    let trials = [];
     
-    task_timeline.push({
+    trials.push({
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `
             <div class="rat-container">
-                <p>Найдите слово, связанное с тремя словами:</p>
-                <div class="rat-words">
-                    ${task.words.join('   ·   ')}
-                </div>
-                <br><br>
+                <h3>${task_label}</h3>
+                <p>Найдите существительное:</p>
+                <div class="rat-words">${task.words.join('   ·   ')}</div>
+                <br>
                 <p style="color: #7f8c8d; font-size: 18px;">
-                    <em>Нажмите ПРОБЕЛ в момент инсайта</em>
+                    <em>⚡ Нажмите ПРОБЕЛ в момент инсайта</em>
                 </p>
             </div>
         `,
         choices: [' '],
         on_start: function() {
-            trial_start_time = performance.now();
+            task_start_time = performance.now();
         },
         on_finish: function(data) {
-            insight_time = performance.now() - trial_start_time;
-            data.insight_time = insight_time;
-            data.task_words = task.words.join(',');
-            data.correct_answer = task.answer;
-            data.trial_type_custom = task.trial;
-            data.condition = CONDITION;
+            data.insight_time = performance.now() - task_start_time;
+            data.is_practice = true;
         }
     });
     
-    task_timeline.push({
+    trials.push({
         type: jsPsychSurveyText,
         questions: [{
-            prompt: `<div class="rat-container">
-                        <p>Слова: <strong>${task.words.join(' · ')}</strong></p>
-                        <p>Введите ваш ответ:</p>
-                     </div>`,
+            prompt: `
+                <div class="rat-container">
+                    <p>Глаголы: <strong style="color: #2c3e50; font-size: 24px;">${task.words.join(' · ')}</strong></p>
+                    <p>Введите существительное:</p>
+                </div>
+            `,
             name: 'answer',
-            required: true
+            required: true,
+            placeholder: 'Ваш ответ'
         }],
         on_finish: function(data) {
-            const user_answer = data.response.answer.toUpperCase().trim();
-            data.correct = user_answer === task.answer;
-            data.user_answer = user_answer;
-            data.insight_time = insight_time;
-            data.task_words = task.words.join(',');
+            data.user_answer = data.response.answer.toUpperCase().trim();
             data.correct_answer = task.answer;
-            data.trial_type_custom = task.trial;
-            data.condition = CONDITION;
+            data.is_practice = true;
         }
     });
     
-    return task_timeline;
+    // Объяснение правильного ответа
+    trials.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+            <div class="rat-container">
+                <h3>Правильный ответ</h3>
+                <p class="correct-answer">${task.answer}</p>
+                <br>
+                <div class="explanation-box">
+                    ${explanation}
+                </div>
+                <br>
+                <p><em>Нажмите ПРОБЕЛ для продолжения</em></p>
+            </div>
+        `,
+        choices: [' ']
+    });
+    
+    return trials;
 }
 
-// Пробная задача
+// Пробная задача 1
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: '<div class="rat-container"><h3>Сначала пробная задача</h3><p>Нажмите ПРОБЕЛ</p></div>',
+    stimulus: `
+        <div class="rat-container">
+            <h3>Теперь попробуйте сами!</h3>
+            <p>Сейчас вы решите две пробные задачи с объяснением</p>
+            <br>
+            <p><em>Нажмите ПРОБЕЛ</em></p>
+        </div>
+    `,
     choices: [' ']
 });
 
-timeline.push(...createRATTrial(RAT_TASKS[0]));
+timeline.push(...createPracticeTrial(
+    {words: ['СМОТРЕТЬ', 'ЛЕТАТЬ', 'ВИДЕТЬ'], answer: 'НЕБО'},
+    'Пробная задача 1',
+    `
+        <p><strong>Проверка:</strong></p>
+        <ul class="example-list">
+            <li><span class="checkmark">✓</span> <strong>СМОТРЕТЬ</strong> на небо — естественно</li>
+            <li><span class="checkmark">✓</span> <strong>ЛЕТАТЬ</strong> по небу — естественно</li>
+            <li><span class="checkmark">✓</span> <strong>ВИДЕТЬ</strong> небо — естественно</li>
+        </ul>
+        <br>
+        <p>Все три сочетания звучат логично. Ответ правильный!</p>
+    `
+));
 
-// Аудио суггестия
+// Пробная задача 2
+timeline.push(...createPracticeTrial(
+    {words: ['ЧИТАТЬ', 'ПИСАТЬ', 'ОТКРЫВАТЬ'], answer: 'КНИГА'},
+    'Пробная задача 2',
+    `
+        <p><strong>Проверка:</strong></p>
+        <ul class="example-list">
+            <li><span class="checkmark">✓</span> <strong>ЧИТАТЬ</strong> книгу — естественно</li>
+            <li><span class="checkmark">✓</span> <strong>ПИСАТЬ</strong> книгу — естественно</li>
+            <li><span class="checkmark">✓</span> <strong>ОТКРЫВАТЬ</strong> книгу — естественно</li>
+        </ul>
+        <br>
+        <p>Все три глагола хорошо сочетаются со словом КНИГА!</p>
+    `
+));
+
+// ============================================
+// 🎧 МЕДИТАЦИЯ (НОВОЕ!)
+// ============================================
+
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: '<div class="rat-container"><p>Сейчас вы услышите аудио. Слушайте внимательно.</p><p>Нажмите ПРОБЕЛ для начала</p></div>',
+    stimulus: `
+        <div class="rat-container">
+            <h3>✓ Пробные задачи завершены</h3>
+            <br>
+            <p>Перед основными задачами сделаем небольшой перерыв.</p>
+            <br>
+            <div class="meditation-instruction">
+                <p>Сейчас вы прослушаете аудиозапись медитации.</p>
+                <p style="margin-top: 20px;">Пожалуйста, помните, что погружение в медитацию не зависит от вашего интеллекта или воли. Лишь от желания пережить новый опыт.</p>
+                <p style="margin-top: 20px;">Поэтому постарайтесь максимально расслабиться и следовать инструкциям в аудио.</p>
+                <p style="margin-top: 20px; color: #666; font-style: italic;">Просто позвольте себе быть открытым к тому, что произойдёт.</p>
+            </div>
+            <br><br>
+            <p><em><strong>Нажмите ПРОБЕЛ, чтобы начать слушать аудио</strong></em></p>
+        </div>
+    `,
     choices: [' ']
 });
 
+// Аудио медитация
 timeline.push({
     type: jsPsychAudioKeyboardResponse,
-    stimulus: AUDIO_FILE,
-    prompt: '<p>Слушайте аудио...</p><p>Нажмите ПРОБЕЛ после прослушивания для продолжения</p>',
-    choices: [' '],
-    trial_ends_after_audio: false
+    stimulus: 'meditation_audio.mp3',
+    prompt: `
+        <div class="rat-container">
+            <h3>Медитация</h3>
+            <div class="meditation-container">
+                <p style="font-size: 18px; color: #333;">
+                    Идёт прослушивание аудиозаписи...
+                </p>
+                <p style="font-size: 16px; color: #666; margin-top: 15px;">
+                    Пожалуйста, дождитесь окончания.
+                </p>
+            </div>
+        </div>
+    `,
+    choices: "NO_KEYS",
+    trial_ends_after_audio: true,
+    on_finish: function(data) {
+        data.participant_id = PARTICIPANT_ID;
+        data.condition = CONDITION;
+        data.trial_type = 'meditation_audio';
+        data.meditation_duration_ms = data.rt;
+        data.timestamp = new Date().toISOString();
+    }
 });
 
-// Основные задачи
+// ============================================
+// ПЕРЕХОД К ОСНОВНЫМ ЗАДАЧАМ
+// ============================================
+
 timeline.push({
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: '<div class="rat-container"><h3>Основные задачи</h3><p>Нажмите ПРОБЕЛ</p></div>',
+    stimulus: `
+        <div class="rat-container">
+            <h3>Основные задачи</h3>
+            <br>
+            <p>Теперь вы понимаете принцип решения задач RAT.</p>
+            <p>Переходим к основным задачам.</p>
+            <p>Всего будет <strong>20 задач</strong>.</p>
+            <br>
+            <div class="explanation-box" style="text-align: center;">
+                <p><strong>Напоминание:</strong></p>
+                <p>Кнопка "Пропустить задачу" появится через 40 секунд после показа задачи.</p>
+                <p>Используйте её только в крайнем случае!</p>
+            </div>
+            <br><br>
+            <p><em>Нажмите ПРОБЕЛ для начала основного эксперимента</em></p>
+        </div>
+    `,
     choices: [' ']
 });
 
-for (let i = 1; i < RAT_TASKS.length; i++) {
-    timeline.push(...createRATTrial(RAT_TASKS[i]));
+// Функция для основных задач (БЕЗ объяснения)
+function createRATTrial(task, task_number) {
+    let trials = [];
+    
+    trials.push({
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function() {
+            return `
+                <div class="rat-container">
+                    <p style="color: #95a5a6; font-size: 18px;">Задача ${task_number} / 20</p>
+                    <p>Найдите существительное, связанное с глаголами:</p>
+                    <div class="rat-words">${task.words.join('   ·   ')}</div>
+                    <br>
+                    <p style="color: #7f8c8d; font-size: 18px;">
+                        <em>⚡ Нажмите ПРОБЕЛ в момент инсайта</em>
+                    </p>
+                    <button id="skip-btn" onclick="skipTask()">Пропустить задачу</button>
+                </div>
+            `;
+        },
+        choices: [' '],
+        on_load: function() {
+            current_task_skipped = false;
+            
+            window.skipTask = function() {
+                current_task_skipped = true;
+                jsPsych.finishTrial();
+            };
+            
+            setTimeout(function() {
+                const btn = document.getElementById('skip-btn');
+                if (btn) btn.style.display = 'inline-block';
+            }, 40000);
+        },
+        on_start: function() {
+            task_start_time = performance.now();
+        },
+        on_finish: function(data) {
+            const rt = performance.now() - task_start_time;
+            data.insight_time = rt;
+            data.task_words = task.words.join(',');
+            data.correct_answer = task.answer;
+            data.is_practice = false;
+            data.condition = CONDITION;
+            data.participant_id = PARTICIPANT_ID;
+            data.task_number = task_number;
+            data.was_skipped = current_task_skipped;
+            
+            if (current_task_skipped) {
+                data.user_answer = 'SKIPPED';
+                data.correct = false;
+                data.trial_type_marker = 'rat_task';
+            }
+        }
+    });
+    
+    trials.push({
+        timeline: [{
+            type: jsPsychSurveyText,
+            questions: [{
+                prompt: `
+                    <div class="rat-container">
+                        <p>Глаголы: <strong style="color: #2c3e50; font-size: 24px;">${task.words.join(' · ')}</strong></p>
+                        <p>Введите существительное:</p>
+                    </div>
+                `,
+                name: 'answer',
+                required: true,
+                placeholder: 'Ваш ответ'
+            }],
+            on_finish: function(data) {
+                const user_answer = data.response.answer.toUpperCase().trim();
+                data.correct = (user_answer === task.answer);
+                data.user_answer = user_answer;
+                data.task_words = task.words.join(',');
+                data.correct_answer = task.answer;
+                data.is_practice = false;
+                data.condition = CONDITION;
+                data.participant_id = PARTICIPANT_ID;
+                data.task_number = task_number;
+                data.trial_type_marker = 'rat_task';
+                data.was_skipped = false;
+            }
+        }],
+        conditional_function: function() {
+            return !current_task_skipped;
+        }
+    });
+    
+    return trials;
+}
+
+// Основные 20 задач
+for (let i = 0; i < RAT_TASKS.length; i++) {
+    timeline.push(...createRATTrial(RAT_TASKS[i], i + 1));
 }
 
 jsPsych.run(timeline);
 
 </script>
 </html>
+
